@@ -25,7 +25,7 @@ export default function Weather() {
         <div className="hidden sm:block w-px h-4 bg-white/10 mx-1" />
 
         <div className="flex-1 w-full sm:w-auto sm:max-w-xs">
-          <ZipSearch initialZip={zip} placeholder="Search another ZIP..." />
+          <ZipSearch initialZip={zip} placeholder="Search another ZIP..." variant="dark" />
         </div>
 
         {state.status === "success" && (
