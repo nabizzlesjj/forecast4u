@@ -255,7 +255,7 @@ describe("Weather page — sub-nav", () => {
 
   it("renders the ZIP search input pre-filled with the current ZIP", () => {
     renderWeather("30307");
-    const input = screen.getByRole("textbox") as HTMLInputElement;
+    const input = screen.getByRole("searchbox") as HTMLInputElement;
     expect(input.value).toBe("30307");
   });
 
