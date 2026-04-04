@@ -51,7 +51,7 @@ export default function ZipSearch({
   const inputClass = isDark
     ? `w-full outline-none transition-all font-mono bg-transparent text-white placeholder-white/30
        border-b-2 border-white/20 focus:border-carbon-blue-40
-       ${isLarge ? "pl-12 pr-4 py-4 text-sm" : "pl-9 pr-4 py-2 text-sm"}
+       ${isLarge ? "pl-12 pr-4 py-4 text-base" : "pl-9 pr-4 py-2 text-sm"}
        ${error ? "border-red-400/60" : ""}`
     : `w-full bg-carbon-gray-10 border-b-2 outline-none transition-colors
        font-mono placeholder-carbon-gray-40 text-carbon-gray-100
