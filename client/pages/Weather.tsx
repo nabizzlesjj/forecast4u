@@ -1,12 +1,26 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
+import {
+  Grid,
+  Column,
+  Button,
+  InlineNotification,
+  SkeletonPlaceholder,
+  SkeletonText,
+  Link as CarbonLink,
+} from "@carbon/react";
+import {
+  ArrowLeft,
+  Renew,
+  Wifi,
+} from "@carbon/icons-react";
 import { useRecentSearches } from "../hooks/useRecentSearches";
-import { AlertCircle, ArrowLeft, RefreshCw, Wifi } from "lucide-react";
 import { useWeather } from "../hooks/useWeather";
 import CurrentWeatherDisplay from "../components/CurrentWeatherDisplay";
 import ForecastGrid from "../components/ForecastGrid";
-import WeatherSkeleton from "../components/WeatherSkeleton";
 import ZipSearch from "../components/ZipSearch";
+
+// ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function Weather() {
   const { zip = "" } = useParams<{ zip: string }>();
@@ -22,110 +36,236 @@ export default function Weather() {
   }, [state.status, zip]);
 
   return (
-    <div className="min-h-[calc(100vh-48px)] flex flex-col bg-[#0d1117]">
-      {/* Sub-nav */}
-      <div className="bg-[#161b22] border-b border-white/8 px-4 sm:px-8 py-3 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-        <Link
-          to="/"
-          className="flex items-center gap-1.5 text-white/40 hover:text-white/80 text-sm transition-colors flex-shrink-0"
-        >
-          <ArrowLeft size={14} />
-          <span>Home</span>
-        </Link>
+    <div
+      style={{
+        minHeight: "calc(100vh - 48px)",
+        display: "flex",
+        flexDirection: "column",
+        background: "#0d1117",
+      }}
+    >
+      {/* ── Sub-nav ── */}
+      <SubNav zip={zip} state={state} addRecentZip={addRecentZip} />
 
-        <div className="hidden sm:block w-px h-4 bg-white/10 mx-1" />
+      {/* ── Content ── */}
+      <div style={{ flex: 1 }}>
 
-        <div className="flex-1 w-full sm:w-auto sm:max-w-xs">
-          <ZipSearch
-            initialZip={zip}
-            placeholder="Search another ZIP..."
-            variant="dark"
-            onSearch={addRecentZip}
-          />
-        </div>
-
-        {state.status === "success" && (
-          <div className="hidden sm:flex items-center gap-1.5 ml-auto text-emerald-400/70 text-xs">
-            <Wifi size={12} />
-            <span>Live data</span>
-          </div>
-        )}
-      </div>
-
-      {/* Content */}
-      <div className="flex-1">
+        {/* Loading state — Carbon Skeleton */}
         {state.status === "loading" && (
-          <div className="max-w-4xl mx-auto">
-            <WeatherSkeleton />
+          <div data-testid="weather-loading">
+            <Grid style={{ paddingTop: "var(--cds-spacing-07, 2rem)" }}>
+              <Column lg={10} md={8} sm={4}>
+                <SkeletonText
+                  heading
+                  width="60%"
+                  style={{ marginBottom: "var(--cds-spacing-05, 1rem)" }}
+                />
+                <SkeletonText paragraph lineCount={2} width="40%" />
+                <SkeletonPlaceholder
+                  style={{
+                    width: "100%",
+                    height: "12rem",
+                    marginTop: "var(--cds-spacing-06, 1.5rem)",
+                  }}
+                />
+              </Column>
+              <Column lg={6} md={8} sm={4}>
+                <SkeletonText paragraph lineCount={4} />
+                <SkeletonPlaceholder
+                  style={{
+                    width: "100%",
+                    height: "8rem",
+                    marginTop: "var(--cds-spacing-06, 1.5rem)",
+                  }}
+                />
+              </Column>
+              <Column lg={16} md={8} sm={4} style={{ marginTop: "var(--cds-spacing-07, 2rem)" }}>
+                <SkeletonText heading width="30%" style={{ marginBottom: "var(--cds-spacing-05, 1rem)" }} />
+                <div style={{ display: "flex", gap: "var(--cds-spacing-03, 0.5rem)", overflowX: "hidden" }}>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <SkeletonPlaceholder
+                      key={i}
+                      style={{ width: "100%", height: "10rem", flexShrink: 0 }}
+                    />
+                  ))}
+                </div>
+              </Column>
+            </Grid>
           </div>
         )}
 
+        {/* Error state — Carbon InlineNotification */}
         {state.status === "error" && (
-          <div className="max-w-2xl mx-auto p-8">
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-10 flex flex-col items-center text-center gap-5">
-              <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center">
-                <AlertCircle size={32} className="text-red-400" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-white mb-2">
-                  Unable to Load Weather
-                </h2>
-                <p className="text-white/40 text-sm max-w-sm leading-relaxed">
-                  {state.message}
-                </p>
-              </div>
-              <div className="flex gap-3 mt-1">
-                <Link
-                  to="/"
-                  className="flex items-center gap-2 border border-white/15 px-4 py-2 rounded-lg text-sm text-white/60 hover:bg-white/5 hover:text-white transition-colors"
+          <Grid style={{ paddingTop: "var(--cds-spacing-09, 3rem)" }}>
+            <Column lg={10} md={8} sm={4} lgOffset={3} mdOffset={0}>
+              <InlineNotification
+                kind="error"
+                title="Unable to Load Weather"
+                subtitle={state.message}
+                role="alert"
+                statusIconDescription="Error"
+                hideCloseButton
+                style={{ marginBottom: "var(--cds-spacing-06, 1.5rem)", maxWidth: "100%" }}
+              />
+              <div style={{ display: "flex", gap: "var(--cds-spacing-04, 0.75rem)" }}>
+                <Button
+                  kind="ghost"
+                  href="/"
+                  renderIcon={ArrowLeft}
+                  iconDescription="Go home"
+                  as="a"
                 >
-                  <ArrowLeft size={14} />
                   Try Another ZIP
-                </Link>
-                <button
+                </Button>
+                <Button
+                  kind="primary"
                   onClick={handleRefresh}
-                  className="flex items-center gap-2 bg-carbon-blue-60 hover:bg-carbon-blue-70 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+                  renderIcon={Renew}
+                  iconDescription="Retry"
                 >
-                  <RefreshCw size={14} />
                   Retry
-                </button>
+                </Button>
               </div>
-            </div>
-          </div>
+            </Column>
+          </Grid>
         )}
 
+        {/* Success state */}
         {state.status === "success" && (
-          <div className="max-w-4xl mx-auto animate-fade-in">
-            <CurrentWeatherDisplay
-              current={state.data.current}
-              locationName={state.data.locationName}
-              zip={state.data.zip}
-            />
+          <Grid style={{ paddingTop: 0 }}>
+            <Column lg={16} md={8} sm={4}>
+              <CurrentWeatherDisplay
+                current={state.data.current}
+                locationName={state.data.locationName}
+                zip={state.data.zip}
+              />
+            </Column>
 
-            <ForecastGrid
-              hourlyByDay={state.data.hourlyByDay}
-              onRefresh={handleRefresh}
-              isRefreshing={false}
-            />
+            <Column lg={16} md={8} sm={4}>
+              <ForecastGrid
+                hourlyByDay={state.data.hourlyByDay}
+                onRefresh={handleRefresh}
+                isRefreshing={false}
+              />
+            </Column>
 
             {/* Attribution */}
-            <div className="px-6 sm:px-12 py-4 flex items-center justify-between">
-              <p className="text-white/20 text-xs">
-                Weather by{" "}
-                <a
-                  href="https://open-meteo.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-white/40 hover:text-white/70 transition-colors"
+            <Column lg={16} md={8} sm={4}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "var(--cds-spacing-05, 1rem) var(--cds-spacing-07, 2rem)",
+                }}
+              >
+                <p
+                  style={{
+                    fontFamily: "var(--cds-font-family-sans, 'IBM Plex Sans', sans-serif)",
+                    fontSize: "var(--cds-label-01-font-size, 0.75rem)",
+                    color: "rgba(255,255,255,0.2)",
+                  }}
                 >
-                  Open-Meteo
-                </a>
-              </p>
-              <span className="font-mono text-white/15 text-xs">{zip}</span>
-            </div>
-          </div>
+                  Weather by{" "}
+                  <a
+                    href="https://open-meteo.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "rgba(255,255,255,0.4)", textDecoration: "none" }}
+                  >
+                    Open-Meteo
+                  </a>
+                </p>
+                <span
+                  style={{
+                    fontFamily: "var(--cds-font-family-mono, 'IBM Plex Mono', monospace)",
+                    fontSize: "var(--cds-label-01-font-size, 0.75rem)",
+                    color: "rgba(255,255,255,0.15)",
+                  }}
+                >
+                  {zip}
+                </span>
+              </div>
+            </Column>
+          </Grid>
         )}
       </div>
+    </div>
+  );
+}
+
+// ── Sub-nav ───────────────────────────────────────────────────────────────────
+
+type WeatherState = ReturnType<typeof useWeather>;
+
+function SubNav({
+  zip,
+  state,
+  addRecentZip,
+}: {
+  zip: string;
+  state: WeatherState;
+  addRecentZip: (zip: string) => void;
+}) {
+  return (
+    <div
+      style={{
+        background: "#161b22",
+        borderBottom: "1px solid rgba(255,255,255,0.08)",
+        padding: "var(--cds-spacing-04, 0.75rem) 0",
+      }}
+    >
+      <Grid>
+        <Column lg={2} md={2} sm={1} style={{ display: "flex", alignItems: "center" }}>
+          <CarbonLink
+            href="/"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "var(--cds-spacing-02, 0.25rem)",
+              color: "rgba(255,255,255,0.4)",
+              textDecoration: "none",
+              fontSize: "var(--cds-body-short-01-font-size, 0.875rem)",
+            }}
+          >
+            <ArrowLeft size={14} aria-hidden="true" />
+            <span>Home</span>
+          </CarbonLink>
+        </Column>
+
+        <Column lg={10} md={5} sm={3} style={{ display: "flex", alignItems: "center" }}>
+          <div style={{ width: "100%", maxWidth: "24rem" }}>
+            <ZipSearch
+              initialZip={zip}
+              placeholder="Search another ZIP..."
+              variant="dark"
+              onSearch={addRecentZip}
+            />
+          </div>
+        </Column>
+
+        {state.status === "success" && (
+          <Column
+            lg={4}
+            md={1}
+            sm={0}
+            style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}
+          >
+            <span
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "var(--cds-spacing-02, 0.25rem)",
+                fontSize: "var(--cds-label-01-font-size, 0.75rem)",
+                color: "rgba(52,211,153,0.7)",
+              }}
+            >
+              <Wifi size={12} aria-hidden="true" />
+              Live data
+            </span>
+          </Column>
+        )}
+      </Grid>
     </div>
   );
 }

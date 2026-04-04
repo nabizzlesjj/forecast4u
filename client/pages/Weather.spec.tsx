@@ -1,11 +1,11 @@
 /**
  * Weather page tests
  *
- * Covers: loading skeleton, error state (message + Retry), success state
- * (current weather + forecast rendered), refresh mechanic (refreshKey
- * increments re-fetch), recent-search persistence, and sub-nav ZIP search.
+ * Covers: Carbon skeleton loading state, Carbon InlineNotification error state,
+ * success layout (current weather + forecast grid), refresh mechanic,
+ * recent-search persistence, and sub-nav ZIP search.
  *
- * All external hooks and child components are mocked so tests run
+ * All external hooks and heavy child components are mocked so tests run
  * instantly with zero network traffic.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -79,7 +79,7 @@ vi.mock("../hooks/useWeather", () => ({
   useWeather: (_zip: string, _key?: number) => mockWeatherState,
 }));
 
-// Stub heavy child components to keep snapshots minimal
+// Stub heavy child components
 vi.mock("../components/CurrentWeatherDisplay", () => ({
   default: ({ locationName }: { locationName: string }) => (
     <div data-testid="current-weather">{locationName}</div>
@@ -92,8 +92,34 @@ vi.mock("../components/ForecastGrid", () => ({
     </div>
   ),
 }));
-vi.mock("../components/WeatherSkeleton", () => ({
-  default: () => <div data-testid="weather-skeleton" />,
+
+// ZipSearch stub — renders a searchbox for sub-nav tests
+vi.mock("../components/ZipSearch", () => ({
+  default: ({
+    initialZip = "",
+    onSearch,
+  }: {
+    initialZip?: string;
+    onSearch?: (zip: string) => void;
+    placeholder?: string;
+    variant?: string;
+  }) => (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        const val = (e.currentTarget.querySelector("input") as HTMLInputElement).value;
+        if (/^\d{5}$/.test(val)) onSearch?.(val);
+      }}
+    >
+      <input
+        type="search"
+        role="searchbox"
+        aria-label="ZIP code search"
+        defaultValue={initialZip}
+      />
+      <button type="submit">Search</button>
+    </form>
+  ),
 }));
 
 const mockNavigate = vi.fn();
@@ -122,9 +148,23 @@ describe("Weather page — loading state", () => {
     mockAddRecentZip.mockClear();
   });
 
-  it("renders the skeleton while data is loading", () => {
+  it("renders the Carbon skeleton wrapper while data is loading", () => {
     renderWeather();
-    expect(screen.getByTestId("weather-skeleton")).toBeDefined();
+    expect(screen.getByTestId("weather-loading")).toBeDefined();
+  });
+
+  it("renders Carbon SkeletonText elements inside the loading wrapper", () => {
+    const { container } = renderWeather();
+    // Carbon SkeletonText renders with cds--skeleton__text (double underscore)
+    const skeletonTexts = container.querySelectorAll(".cds--skeleton__text");
+    expect(skeletonTexts.length).toBeGreaterThan(0);
+  });
+
+  it("renders Carbon SkeletonPlaceholder elements inside the loading wrapper", () => {
+    const { container } = renderWeather();
+    // Carbon SkeletonPlaceholder renders with cds--skeleton__placeholder (double underscore)
+    const skeletonPlaceholders = container.querySelectorAll(".cds--skeleton__placeholder");
+    expect(skeletonPlaceholders.length).toBeGreaterThan(0);
   });
 
   it("does not render the forecast grid while loading", () => {
@@ -132,9 +172,9 @@ describe("Weather page — loading state", () => {
     expect(screen.queryByTestId("forecast-grid")).toBeNull();
   });
 
-  it("does not render the error state while loading", () => {
+  it("does not render the error notification while loading", () => {
     renderWeather();
-    expect(screen.queryByText(/unable to load weather/i)).toBeNull();
+    expect(screen.queryByRole("alert")).toBeNull();
   });
 
   it("does not save to recent searches while loading", () => {
@@ -145,34 +185,42 @@ describe("Weather page — loading state", () => {
 
 describe("Weather page — error state", () => {
   beforeEach(() => {
-    mockWeatherState = { status: "error", message: "No location found for ZIP code \"00000\"." };
+    mockWeatherState = {
+      status: "error",
+      message: 'No location found for ZIP code "00000".',
+    };
     mockAddRecentZip.mockClear();
     mockNavigate.mockClear();
   });
 
-  it("renders the error heading", () => {
+  it("renders a Carbon InlineNotification with error kind", () => {
+    renderWeather("00000");
+    expect(screen.getByRole("alert")).toBeDefined();
+  });
+
+  it("renders the error heading title in the notification", () => {
     renderWeather("00000");
     expect(screen.getByText(/unable to load weather/i)).toBeDefined();
   });
 
-  it("renders the error message from the hook", () => {
+  it("renders the error message from the hook as the subtitle", () => {
     renderWeather("00000");
     expect(screen.getByText(/no location found/i)).toBeDefined();
   });
 
-  it("renders the Retry button", () => {
+  it("renders a Retry button", () => {
     renderWeather("00000");
     expect(screen.getByRole("button", { name: /retry/i })).toBeDefined();
   });
 
-  it("renders the 'Try Another ZIP' back link", () => {
+  it("renders a 'Try Another ZIP' action link", () => {
     renderWeather("00000");
     expect(screen.getByText(/try another zip/i)).toBeDefined();
   });
 
-  it("does not render the skeleton in error state", () => {
+  it("does not render the skeleton loading wrapper in error state", () => {
     renderWeather("00000");
-    expect(screen.queryByTestId("weather-skeleton")).toBeNull();
+    expect(screen.queryByTestId("weather-loading")).toBeNull();
   });
 
   it("does not save to recent searches on error", () => {
@@ -187,7 +235,7 @@ describe("Weather page — success state", () => {
     mockAddRecentZip.mockClear();
   });
 
-  it("renders the CurrentWeatherDisplay with location name", () => {
+  it("renders the CurrentWeatherDisplay with the location name", () => {
     renderWeather();
     expect(screen.getByTestId("current-weather")).toBeDefined();
     expect(screen.getByText("Atlanta, Georgia")).toBeDefined();
@@ -200,12 +248,12 @@ describe("Weather page — success state", () => {
 
   it("does not render the skeleton on success", () => {
     renderWeather();
-    expect(screen.queryByTestId("weather-skeleton")).toBeNull();
+    expect(screen.queryByTestId("weather-loading")).toBeNull();
   });
 
-  it("does not render the error panel on success", () => {
+  it("does not render the error notification on success", () => {
     renderWeather();
-    expect(screen.queryByText(/unable to load weather/i)).toBeNull();
+    expect(screen.queryByRole("alert")).toBeNull();
   });
 
   it("saves the ZIP to recent searches when status becomes success", async () => {
@@ -215,9 +263,17 @@ describe("Weather page — success state", () => {
 
   it("shows the ZIP in the attribution footer", () => {
     renderWeather("30307");
-    // The ZIP appears as a mono text node in the footer
     const zips = screen.getAllByText("30307");
     expect(zips.length).toBeGreaterThan(0);
+  });
+
+  it("renders inside a Carbon Grid structure", () => {
+    const { container } = renderWeather();
+    // Carbon Grid renders with cds--grid (FlexGrid) or cds--css-grid (CSSGrid)
+    const grid =
+      container.querySelector(".cds--grid") ||
+      container.querySelector(".cds--css-grid");
+    expect(grid).not.toBeNull();
   });
 });
 
@@ -235,11 +291,9 @@ describe("Weather page — Refresh mechanic", () => {
   it("clicking Refresh triggers a state update (re-render without crash)", async () => {
     renderWeather();
     const refreshBtn = screen.getByRole("button", { name: /refresh forecast/i });
-    // Flip state to loading immediately after click to simulate re-fetch
     mockWeatherState = { status: "loading" };
     fireEvent.click(refreshBtn);
-    // Component should still be in the DOM (no error boundary triggered)
-    await waitFor(() => expect(screen.getByTestId("weather-skeleton")).toBeDefined());
+    await waitFor(() => expect(screen.getByTestId("weather-loading")).toBeDefined());
   });
 });
 

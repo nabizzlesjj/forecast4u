@@ -1,16 +1,33 @@
-import { Cloud, ArrowRight, Wind, Droplets, Sun, Clock, X } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import {
+  Grid,
+  Column,
+  Tag,
+  ClickableTile,
+} from "@carbon/react";
+import {
+  Cloud,
+  ArrowRight,
+  Windy,
+  Sun,
+  RainDrop,
+  Time,
+} from "@carbon/icons-react";
 import ZipSearch from "../components/ZipSearch";
 import { useRecentSearches } from "../hooks/useRecentSearches";
 
+// ── Featured locations ────────────────────────────────────────────────────────
+
 const FEATURED_LOCATIONS = [
-  { zip: "10001", label: "New York City", state: "NY", icon: <Wind size={14} /> },
-  { zip: "90210", label: "Beverly Hills", state: "CA", icon: <Sun size={14} /> },
-  { zip: "60601", label: "Chicago", state: "IL", icon: <Wind size={14} /> },
-  { zip: "77001", label: "Houston", state: "TX", icon: <Sun size={14} /> },
-  { zip: "85001", label: "Phoenix", state: "AZ", icon: <Sun size={14} /> },
-  { zip: "19101", label: "Philadelphia", state: "PA", icon: <Droplets size={14} /> },
+  { zip: "10001", label: "New York City",  state: "NY", Icon: Windy },
+  { zip: "90210", label: "Beverly Hills",  state: "CA", Icon: Sun },
+  { zip: "60601", label: "Chicago",        state: "IL", Icon: Windy },
+  { zip: "77001", label: "Houston",        state: "TX", Icon: Sun },
+  { zip: "85001", label: "Phoenix",        state: "AZ", Icon: Sun },
+  { zip: "19101", label: "Philadelphia",   state: "PA", Icon: RainDrop },
 ];
+
+// ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function Index() {
   const { recentZips, addRecentZip, removeRecentZip } = useRecentSearches();
@@ -23,182 +40,349 @@ export default function Index() {
 
   return (
     <div
-      className="min-h-[calc(100vh-48px)] flex flex-col"
-      style={{ background: "#0d1117" }}
+      style={{
+        background: "#0d1117",
+        minHeight: "calc(100vh - 48px)",
+        display: "flex",
+        flexDirection: "column",
+      }}
     >
-      {/* Hero */}
-      <div className="relative flex-1 flex flex-col items-center justify-center px-4 py-20 overflow-hidden">
+      {/* ── Hero ── */}
+      <div
+        style={{
+          flex: 1,
+          position: "relative",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "5rem 0",
+          overflow: "hidden",
+        }}
+      >
         {/* Atmospheric glow */}
         <div
-          className="absolute inset-0 pointer-events-none"
+          aria-hidden="true"
           style={{
+            position: "absolute",
+            inset: 0,
+            pointerEvents: "none",
             background:
               "radial-gradient(ellipse 70% 55% at 50% 35%, rgba(15,98,254,0.18) 0%, transparent 70%)",
           }}
         />
-        {/* Subtle grid */}
+        {/* Subtle grid overlay */}
         <div
-          className="absolute inset-0 pointer-events-none opacity-[0.03]"
+          aria-hidden="true"
           style={{
+            position: "absolute",
+            inset: 0,
+            pointerEvents: "none",
+            opacity: 0.03,
             backgroundImage:
               "linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)",
             backgroundSize: "48px 48px",
           }}
         />
 
-        <div className="relative z-10 flex flex-col items-center text-center w-full max-w-2xl">
-          {/* Icon */}
-          <div className="relative mb-8">
+        {/* Carbon Grid for hero content */}
+        <Grid style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: "48rem" }}>
+          <Column lg={16} md={8} sm={4}>
             <div
-              className="w-24 h-24 rounded-2xl flex items-center justify-center"
               style={{
-                background: "linear-gradient(135deg, #0f62fe 0%, #0043ce 100%)",
-                boxShadow: "0 0 60px rgba(15,98,254,0.4), 0 0 120px rgba(15,98,254,0.15)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                textAlign: "center",
               }}
             >
-              <Cloud size={44} className="text-white" />
-            </div>
-            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-carbon-blue-40 rounded-sm" />
-          </div>
-
-          {/* Brand */}
-          <h1 className="text-5xl sm:text-7xl font-extralight text-white tracking-tight mb-3">
-            Forecast<span className="text-carbon-blue-40 font-semibold">4U</span>
-          </h1>
-          <p className="text-white/35 text-base sm:text-lg max-w-sm leading-relaxed mb-10">
-            Instant, accurate U.S. weather by ZIP code.
-          </p>
-
-          {/* Search */}
-          <div className="w-full max-w-lg">
-            <ZipSearch
-              size="large"
-              variant="dark"
-              placeholder="Enter a 5-digit ZIP code..."
-              onSearch={addRecentZip}
-            />
-          </div>
-
-          {/* ── Recent Searches ── */}
-          {recentZips.length > 0 && (
-            <div className="w-full max-w-lg mt-5 text-left animate-fade-in">
-              <div className="flex items-center gap-2 mb-2.5">
-                <Clock size={11} className="text-white/25" />
-                <span className="text-[11px] font-semibold uppercase tracking-widest text-white/25">
-                  Recent Searches
-                </span>
+              {/* Logo icon */}
+              <div style={{ position: "relative", marginBottom: "2rem" }}>
+                <div
+                  style={{
+                    width: "6rem",
+                    height: "6rem",
+                    borderRadius: "1rem",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background:
+                      "linear-gradient(135deg, #0f62fe 0%, #0043ce 100%)",
+                    boxShadow:
+                      "0 0 60px rgba(15,98,254,0.4), 0 0 120px rgba(15,98,254,0.15)",
+                  }}
+                  aria-hidden="true"
+                >
+                  <Cloud size={44} color="white" />
+                </div>
+                <div
+                  aria-hidden="true"
+                  style={{
+                    position: "absolute",
+                    bottom: "-4px",
+                    right: "-4px",
+                    width: "1rem",
+                    height: "1rem",
+                    background: "#78a9ff",
+                    borderRadius: "2px",
+                  }}
+                />
               </div>
-              <div className="flex flex-wrap gap-2">
-                {recentZips.map((zip) => (
-                  <RecentTag
-                    key={zip}
-                    zip={zip}
-                    onClick={() => handleTagClick(zip)}
-                    onRemove={() => removeRecentZip(zip)}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
 
-          <p className="text-white/20 text-xs mt-6 tracking-wide">
-            United States only · No account required
-          </p>
-        </div>
-      </div>
-
-      {/* Featured locations */}
-      <div className="border-t border-white/8 bg-[#0d1117]">
-        <div className="max-w-4xl mx-auto px-4 sm:px-8 py-8">
-          <p className="text-xs font-semibold uppercase tracking-widest text-white/25 mb-5">
-            Popular locations
-          </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {FEATURED_LOCATIONS.map((loc) => (
-              <Link
-                key={loc.zip}
-                to={`/weather/${loc.zip}`}
-                className="group relative flex items-center justify-between bg-white/5 hover:bg-white/10 border border-white/8 hover:border-white/15 rounded-xl px-4 py-4 transition-all duration-200"
+              {/* Brand heading — Carbon's productive-heading-06 equivalent */}
+              <h1
+                style={{
+                  fontFamily: "var(--cds-font-family-sans, 'IBM Plex Sans', sans-serif)",
+                  fontSize: "clamp(2.5rem, 8vw, 4.5rem)",
+                  fontWeight: 200,
+                  letterSpacing: "-0.02em",
+                  color: "white",
+                  margin: 0,
+                  lineHeight: 1.1,
+                  marginBottom: "var(--cds-spacing-03, 0.5rem)",
+                }}
               >
-                <div className="flex items-center gap-3">
-                  <div className="text-white/25 group-hover:text-carbon-blue-40 transition-colors">
-                    {loc.icon}
+                Forecast
+                <span style={{ color: "#78a9ff", fontWeight: 700 }}>4U</span>
+              </h1>
+
+              <p
+                style={{
+                  fontFamily: "var(--cds-font-family-sans, 'IBM Plex Sans', sans-serif)",
+                  fontSize: "var(--cds-body-01-font-size, 0.875rem)",
+                  lineHeight: "var(--cds-body-01-line-height, 1.42857)",
+                  color: "rgba(255,255,255,0.35)",
+                  maxWidth: "22rem",
+                  marginBottom: "var(--cds-spacing-09, 3rem)",
+                }}
+              >
+                Instant, accurate U.S. weather by ZIP code.
+              </p>
+
+              {/* ZIP Search */}
+              <div style={{ width: "100%", maxWidth: "32rem" }}>
+                <ZipSearch
+                  size="large"
+                  variant="dark"
+                  placeholder="Enter a 5-digit ZIP code..."
+                  onSearch={addRecentZip}
+                />
+              </div>
+
+              {/* ── Recent Searches ── */}
+              {recentZips.length > 0 && (
+                <div
+                  style={{
+                    width: "100%",
+                    maxWidth: "32rem",
+                    marginTop: "var(--cds-spacing-05, 1rem)",
+                    textAlign: "left",
+                  }}
+                  data-testid="recent-searches"
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "var(--cds-spacing-02, 0.25rem)",
+                      marginBottom: "var(--cds-spacing-03, 0.5rem)",
+                    }}
+                  >
+                    <Time size={12} color="rgba(255,255,255,0.25)" aria-hidden="true" />
+                    <span
+                      style={{
+                        fontFamily:
+                          "var(--cds-font-family-sans, 'IBM Plex Sans', sans-serif)",
+                        fontSize: "var(--cds-label-01-font-size, 0.75rem)",
+                        fontWeight: 600,
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
+                        color: "rgba(255,255,255,0.25)",
+                      }}
+                    >
+                      Recent Searches
+                    </span>
                   </div>
-                  <div>
-                    <p className="text-white/80 text-sm font-medium group-hover:text-white transition-colors">
-                      {loc.label}
-                    </p>
-                    <p className="text-white/30 text-xs mt-0.5">
-                      <span className="font-mono">{loc.zip}</span>
-                      <span className="mx-1">·</span>
-                      {loc.state}
-                    </p>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--cds-spacing-02, 0.25rem)" }}>
+                    {recentZips.map((zip) => (
+                      <Tag
+                        key={zip}
+                        type="blue"
+                        filter
+                        onClick={() => handleTagClick(zip)}
+                        onClose={(e: React.MouseEvent) => {
+                          e.stopPropagation();
+                          removeRecentZip(zip);
+                        }}
+                        title={`Remove ${zip}`}
+                        style={{ cursor: "pointer", fontFamily: "var(--cds-font-family-mono, 'IBM Plex Mono', monospace)" }}
+                      >
+                        {zip}
+                      </Tag>
+                    ))}
                   </div>
                 </div>
-                <ArrowRight
-                  size={14}
-                  className="text-white/20 group-hover:text-carbon-blue-40 group-hover:translate-x-0.5 transition-all flex-shrink-0"
-                />
-              </Link>
-            ))}
-          </div>
-        </div>
+              )}
+
+              <p
+                style={{
+                  fontFamily: "var(--cds-font-family-sans, 'IBM Plex Sans', sans-serif)",
+                  fontSize: "var(--cds-label-01-font-size, 0.75rem)",
+                  color: "rgba(255,255,255,0.2)",
+                  marginTop: "var(--cds-spacing-06, 1.5rem)",
+                  letterSpacing: "0.04em",
+                }}
+              >
+                United States only · No account required
+              </p>
+            </div>
+          </Column>
+        </Grid>
       </div>
 
-      {/* Footer */}
-      <div className="border-t border-white/8 px-4 sm:px-8 py-4">
-        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p className="text-white/20 text-xs">
-            © {new Date().getFullYear()} Forecast4U
-          </p>
-          <a
-            href="https://open-meteo.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-white/20 hover:text-white/50 text-xs transition-colors"
-          >
-            Weather data by Open-Meteo
-          </a>
-        </div>
+      {/* ── Popular locations ── */}
+      <div
+        style={{
+          borderTop: "1px solid rgba(255,255,255,0.08)",
+          background: "#0d1117",
+          padding: "var(--cds-spacing-07, 2rem) 0",
+        }}
+      >
+        <Grid>
+          <Column lg={16} md={8} sm={4}>
+            <p
+              style={{
+                fontFamily: "var(--cds-font-family-sans, 'IBM Plex Sans', sans-serif)",
+                fontSize: "var(--cds-label-01-font-size, 0.75rem)",
+                fontWeight: 600,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                color: "rgba(255,255,255,0.25)",
+                marginBottom: "var(--cds-spacing-05, 1rem)",
+              }}
+            >
+              Popular locations
+            </p>
+          </Column>
+
+          {FEATURED_LOCATIONS.map(({ zip, label, state, Icon }) => (
+            <Column key={zip} lg={8} md={4} sm={4}>
+              <PopularTile
+                zip={zip}
+                label={label}
+                state={state}
+                Icon={Icon}
+              />
+            </Column>
+          ))}
+        </Grid>
+      </div>
+
+      {/* ── Footer ── */}
+      <div
+        style={{
+          borderTop: "1px solid rgba(255,255,255,0.08)",
+          padding: "var(--cds-spacing-05, 1rem) var(--cds-spacing-07, 2rem)",
+        }}
+      >
+        <Grid>
+          <Column lg={8} md={4} sm={2}>
+            <p
+              style={{
+                fontFamily: "var(--cds-font-family-sans, 'IBM Plex Sans', sans-serif)",
+                fontSize: "var(--cds-label-01-font-size, 0.75rem)",
+                color: "rgba(255,255,255,0.2)",
+              }}
+            >
+              © {new Date().getFullYear()} Forecast4U
+            </p>
+          </Column>
+          <Column lg={8} md={4} sm={2}>
+            <p style={{ textAlign: "right" }}>
+              <a
+                href="https://open-meteo.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  fontFamily: "var(--cds-font-family-sans, 'IBM Plex Sans', sans-serif)",
+                  fontSize: "var(--cds-label-01-font-size, 0.75rem)",
+                  color: "rgba(255,255,255,0.2)",
+                  textDecoration: "none",
+                }}
+              >
+                Weather data by Open-Meteo
+              </a>
+            </p>
+          </Column>
+        </Grid>
       </div>
     </div>
   );
 }
 
-// ── Carbon-inspired interactive filter tag ──────────────────────────────────
-function RecentTag({
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+function PopularTile({
   zip,
-  onClick,
-  onRemove,
+  label,
+  state,
+  Icon,
 }: {
   zip: string;
-  onClick: () => void;
-  onRemove: (e: React.MouseEvent) => void;
+  label: string;
+  state: string;
+  Icon: React.ComponentType<{ size?: number; color?: string; "aria-hidden"?: boolean }>;
 }) {
-  return (
-    <div
-      className="group inline-flex items-center gap-0 rounded-full border border-white/15 bg-white/8 hover:bg-carbon-blue-60/20 hover:border-carbon-blue-40/40 transition-all duration-150 overflow-hidden"
-      role="group"
-    >
-      {/* Clickable label area */}
-      <button
-        type="button"
-        onClick={onClick}
-        className="flex items-center gap-1.5 pl-3 pr-2 py-1.5 text-xs font-mono text-white/60 group-hover:text-white transition-colors"
-      >
-        <Clock size={10} className="text-white/30 group-hover:text-carbon-blue-30 transition-colors" />
-        {zip}
-      </button>
+  const navigate = useNavigate();
 
-      {/* Dismiss button */}
-      <button
-        type="button"
-        onClick={onRemove}
-        aria-label={`Remove ${zip} from recent searches`}
-        className="flex items-center justify-center px-2 py-1.5 text-white/20 hover:text-white/70 hover:bg-white/10 transition-colors border-l border-white/10"
+  return (
+    <ClickableTile
+      id={`location-${zip}`}
+      onClick={() => navigate(`/weather/${zip}`)}
+      style={{
+        background: "rgba(255,255,255,0.04)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        borderRadius: "0",
+        marginBottom: "var(--cds-spacing-03, 0.5rem)",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
       >
-        <X size={10} />
-      </button>
-    </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--cds-spacing-04, 0.75rem)" }}>
+          <span style={{ color: "rgba(255,255,255,0.25)" }} aria-hidden="true">
+            <Icon size={16} />
+          </span>
+          <div>
+            <p
+              style={{
+                fontFamily: "var(--cds-font-family-sans, 'IBM Plex Sans', sans-serif)",
+                fontSize: "var(--cds-body-short-01-font-size, 0.875rem)",
+                fontWeight: 400,
+                color: "rgba(255,255,255,0.8)",
+                margin: 0,
+              }}
+            >
+              {label}
+            </p>
+            <p
+              style={{
+                fontFamily: "var(--cds-font-family-mono, 'IBM Plex Mono', monospace)",
+                fontSize: "var(--cds-label-01-font-size, 0.75rem)",
+                color: "rgba(255,255,255,0.3)",
+                margin: 0,
+              }}
+            >
+              {zip} · {state}
+            </p>
+          </div>
+        </div>
+        <ArrowRight size={16} color="rgba(255,255,255,0.2)" aria-hidden="true" />
+      </div>
+    </ClickableTile>
   );
 }
