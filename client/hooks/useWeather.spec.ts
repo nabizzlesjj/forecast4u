@@ -240,3 +240,40 @@ describe("useWeather — invalid ZIP short-circuit", () => {
     expect(global.fetch).not.toHaveBeenCalled();
   });
 });
+
+describe("useWeather — refreshKey", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it("re-fetches when refreshKey increments", async () => {
+    global.fetch = makeFetchMock(GEOCODE_SUCCESS, WEATHER_SUCCESS);
+    let key = 0;
+    const { result, rerender } = renderHook(() => useWeather("30606", key));
+
+    // Wait for first fetch to complete
+    await waitFor(() => expect(result.current.status).toBe("success"));
+    const firstCallCount = (global.fetch as ReturnType<typeof vi.fn>).mock.calls.length;
+
+    // Increment key → should trigger a new fetch
+    key = 1;
+    rerender();
+
+    await waitFor(() => {
+      const totalCalls = (global.fetch as ReturnType<typeof vi.fn>).mock.calls.length;
+      expect(totalCalls).toBeGreaterThan(firstCallCount);
+    });
+  });
+
+  it("returns to 'loading' status immediately after refreshKey changes", async () => {
+    global.fetch = makeFetchMock(GEOCODE_SUCCESS, WEATHER_SUCCESS);
+    let key = 0;
+    const { result, rerender } = renderHook(() => useWeather("30606", key));
+
+    await waitFor(() => expect(result.current.status).toBe("success"));
+
+    key = 1;
+    rerender();
+
+    // Should immediately flip back to loading
+    expect(result.current.status).toBe("loading");
+  });
+});

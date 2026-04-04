@@ -1,5 +1,5 @@
 import { useParams, Link } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRecentSearches } from "../hooks/useRecentSearches";
 import { AlertCircle, ArrowLeft, RefreshCw, Wifi } from "lucide-react";
 import { useWeather } from "../hooks/useWeather";
@@ -10,8 +10,11 @@ import ZipSearch from "../components/ZipSearch";
 
 export default function Weather() {
   const { zip = "" } = useParams<{ zip: string }>();
-  const state = useWeather(zip);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const state = useWeather(zip, refreshKey);
   const { addRecentZip } = useRecentSearches();
+
+  const handleRefresh = () => setRefreshKey((k) => k + 1);
 
   // Save to recent searches whenever a ZIP resolves successfully
   useEffect(() => {
@@ -80,7 +83,7 @@ export default function Weather() {
                   Try Another ZIP
                 </Link>
                 <button
-                  onClick={() => window.location.reload()}
+                  onClick={handleRefresh}
                   className="flex items-center gap-2 bg-carbon-blue-60 hover:bg-carbon-blue-70 text-white px-4 py-2 rounded-lg text-sm transition-colors"
                 >
                   <RefreshCw size={14} />
@@ -99,7 +102,11 @@ export default function Weather() {
               zip={state.data.zip}
             />
 
-            <ForecastGrid forecast={state.data.forecast} />
+            <ForecastGrid
+              forecast={state.data.forecast}
+              onRefresh={handleRefresh}
+              isRefreshing={false}
+            />
 
             {/* Attribution */}
             <div className="px-6 sm:px-12 py-4 flex items-center justify-between">

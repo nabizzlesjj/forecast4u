@@ -132,7 +132,7 @@ async function fetchWeather(lat: number, lon: number): Promise<{
   return { current, forecast };
 }
 
-export function useWeather(zip: string): WeatherState {
+export function useWeather(zip: string, refreshKey = 0): WeatherState {
   const [state, setState] = useState<WeatherState>({ status: "idle" });
 
   useEffect(() => {
@@ -172,7 +172,7 @@ export function useWeather(zip: string): WeatherState {
     return () => {
       cancelled = true;
     };
-  }, [zip]);
+  }, [zip, refreshKey]);
 
   return state;
 }
