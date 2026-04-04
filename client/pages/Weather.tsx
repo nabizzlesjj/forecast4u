@@ -1,5 +1,5 @@
 import { useParams, Link } from "react-router-dom";
-import { AlertCircle, ArrowLeft, RefreshCw } from "lucide-react";
+import { AlertCircle, ArrowLeft, RefreshCw, Wifi } from "lucide-react";
 import { useWeather } from "../hooks/useWeather";
 import CurrentWeatherDisplay from "../components/CurrentWeatherDisplay";
 import ForecastGrid from "../components/ForecastGrid";
@@ -11,25 +11,28 @@ export default function Weather() {
   const state = useWeather(zip);
 
   return (
-    <div className="min-h-[calc(100vh-48px)] flex flex-col bg-carbon-gray-10">
-      {/* Top nav bar */}
-      <div className="bg-white border-b border-carbon-gray-20 px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+    <div className="min-h-[calc(100vh-48px)] flex flex-col bg-[#0d1117]">
+      {/* Sub-nav */}
+      <div className="bg-[#161b22] border-b border-white/8 px-4 sm:px-8 py-3 flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <Link
           to="/"
-          className="flex items-center gap-2 text-carbon-gray-60 hover:text-carbon-blue-60 text-sm transition-colors flex-shrink-0"
+          className="flex items-center gap-1.5 text-white/40 hover:text-white/80 text-sm transition-colors flex-shrink-0"
         >
           <ArrowLeft size={14} />
-          <span>Back</span>
+          <span>Home</span>
         </Link>
 
-        <div className="flex-1 w-full sm:w-auto sm:max-w-sm">
-          <ZipSearch initialZip={zip} placeholder="Change ZIP code..." />
+        <div className="hidden sm:block w-px h-4 bg-white/10 mx-1" />
+
+        <div className="flex-1 w-full sm:w-auto sm:max-w-xs">
+          <ZipSearch initialZip={zip} placeholder="Search another ZIP..." />
         </div>
 
         {state.status === "success" && (
-          <span className="text-xs text-carbon-gray-50 ml-auto hidden sm:block">
-            Live weather data
-          </span>
+          <div className="hidden sm:flex items-center gap-1.5 ml-auto text-emerald-400/70 text-xs">
+            <Wifi size={12} />
+            <span>Live data</span>
+          </div>
         )}
       </div>
 
@@ -42,28 +45,30 @@ export default function Weather() {
         )}
 
         {state.status === "error" && (
-          <div className="max-w-4xl mx-auto p-8">
-            <div className="bg-white border border-red-200 p-8 flex flex-col items-center text-center gap-4">
-              <AlertCircle size={40} className="text-red-500" />
+          <div className="max-w-2xl mx-auto p-8">
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-10 flex flex-col items-center text-center gap-5">
+              <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center">
+                <AlertCircle size={32} className="text-red-400" />
+              </div>
               <div>
-                <h2 className="text-lg font-semibold text-carbon-gray-100 mb-2">
+                <h2 className="text-lg font-semibold text-white mb-2">
                   Unable to Load Weather
                 </h2>
-                <p className="text-carbon-gray-60 text-sm max-w-sm">
+                <p className="text-white/40 text-sm max-w-sm leading-relaxed">
                   {state.message}
                 </p>
               </div>
-              <div className="flex gap-3 mt-2">
+              <div className="flex gap-3 mt-1">
                 <Link
                   to="/"
-                  className="flex items-center gap-2 border border-carbon-gray-30 px-4 py-2 text-sm text-carbon-gray-70 hover:bg-carbon-gray-10 transition-colors"
+                  className="flex items-center gap-2 border border-white/15 px-4 py-2 rounded-lg text-sm text-white/60 hover:bg-white/5 hover:text-white transition-colors"
                 >
                   <ArrowLeft size={14} />
                   Try Another ZIP
                 </Link>
                 <button
                   onClick={() => window.location.reload()}
-                  className="flex items-center gap-2 bg-carbon-blue-60 text-white px-4 py-2 text-sm hover:bg-carbon-blue-70 transition-colors"
+                  className="flex items-center gap-2 bg-carbon-blue-60 hover:bg-carbon-blue-70 text-white px-4 py-2 rounded-lg text-sm transition-colors"
                 >
                   <RefreshCw size={14} />
                   Retry
@@ -75,31 +80,28 @@ export default function Weather() {
 
         {state.status === "success" && (
           <div className="max-w-4xl mx-auto animate-fade-in">
-            {/* Current weather */}
             <CurrentWeatherDisplay
               current={state.data.current}
               locationName={state.data.locationName}
               zip={state.data.zip}
             />
 
-            {/* 5-day forecast */}
             <ForecastGrid forecast={state.data.forecast} />
 
-            {/* Data attribution */}
-            <div className="px-4 py-4 flex items-center justify-between">
-              <p className="text-carbon-gray-50 text-xs">
-                Data provided by{" "}
+            {/* Attribution */}
+            <div className="px-6 sm:px-12 py-4 flex items-center justify-between">
+              <p className="text-white/20 text-xs">
+                Weather by{" "}
                 <a
                   href="https://open-meteo.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-carbon-blue-60 hover:underline"
+                  className="text-white/40 hover:text-white/70 transition-colors"
                 >
                   Open-Meteo
-                </a>{" "}
-                · Updates automatically
+                </a>
               </p>
-              <span className="font-mono text-carbon-gray-40 text-xs">{zip}</span>
+              <span className="font-mono text-white/15 text-xs">{zip}</span>
             </div>
           </div>
         )}

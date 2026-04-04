@@ -1,4 +1,4 @@
-import WeatherIcon, { getWeatherColor } from "./WeatherIcon";
+import WeatherIcon, { getWeatherColor, getWeatherGlow } from "./WeatherIcon";
 import type { DayForecast } from "../hooks/useWeather";
 
 interface ForecastGridProps {
@@ -6,66 +6,113 @@ interface ForecastGridProps {
 }
 
 export default function ForecastGrid({ forecast }: ForecastGridProps) {
+  const allTemps = forecast.flatMap((d) => [d.minTemp, d.maxTemp]);
+  const globalMin = Math.min(...allTemps);
+  const globalMax = Math.max(...allTemps);
+
   return (
-    <div className="bg-white border-t border-carbon-gray-20 animate-slide-up">
-      <div className="px-6 py-4 border-b border-carbon-gray-20">
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-carbon-gray-60">
+    <div
+      className="animate-slide-up"
+      style={{ background: "linear-gradient(180deg, #111827 0%, #0f172a 100%)" }}
+    >
+      {/* Section header */}
+      <div className="px-6 sm:px-12 pt-6 pb-4 flex items-center gap-3">
+        <span className="text-xs font-semibold uppercase tracking-widest text-white/30">
           5-Day Forecast
-        </h2>
+        </span>
+        <div className="flex-1 h-px bg-white/10" />
       </div>
-      <div className="grid grid-cols-5 divide-x divide-carbon-gray-20">
-        {forecast.map((day) => (
-          <ForecastCard key={day.date} day={day} />
+
+      {/* Cards row */}
+      <div className="grid grid-cols-5 gap-2 px-4 sm:px-8 pb-8">
+        {forecast.map((day, i) => (
+          <ForecastCard
+            key={day.date}
+            day={day}
+            globalMin={globalMin}
+            globalMax={globalMax}
+            isToday={i === 0}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-function ForecastCard({ day }: { day: DayForecast }) {
+function ForecastCard({
+  day,
+  globalMin,
+  globalMax,
+  isToday,
+}: {
+  day: DayForecast;
+  globalMin: number;
+  globalMax: number;
+  isToday: boolean;
+}) {
   const iconColor = getWeatherColor(day.weatherCode);
-  const range = day.maxTemp - day.minTemp;
+  const glowColor = getWeatherGlow(day.weatherCode);
+  const range = globalMax - globalMin || 1;
+  const lowPct = ((day.minTemp - globalMin) / range) * 100;
+  const highPct = ((day.maxTemp - globalMin) / range) * 100;
 
   return (
-    <div className="flex flex-col items-center py-6 px-2 gap-3 hover:bg-carbon-gray-10 transition-colors group">
-      {/* Day name */}
-      <span className="text-xs font-semibold uppercase tracking-widest text-carbon-gray-60">
+    <div
+      className={`
+        group relative flex flex-col items-center gap-3 rounded-2xl px-2 py-5
+        border transition-all duration-200 cursor-default
+        ${isToday
+          ? "bg-white/10 border-white/20 shadow-lg"
+          : "bg-white/5 border-white/8 hover:bg-white/10 hover:border-white/15"
+        }
+      `}
+    >
+      {/* Today badge */}
+      {isToday && (
+        <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-carbon-blue-60 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider">
+          Now
+        </span>
+      )}
+
+      {/* Day label */}
+      <span className={`text-xs font-semibold uppercase tracking-widest ${isToday ? "text-white" : "text-white/40"}`}>
         {day.dayName}
       </span>
 
-      {/* Weather icon */}
-      <div className={`${iconColor} transition-transform group-hover:scale-110`}>
-        <WeatherIcon code={day.weatherCode} size={32} />
+      {/* Icon with subtle glow */}
+      <div
+        className={`${iconColor} transition-transform duration-200 group-hover:scale-110`}
+        style={{ filter: `drop-shadow(0 0 8px ${glowColor})` }}
+      >
+        <WeatherIcon code={day.weatherCode} size={36} />
       </div>
 
       {/* Weather label */}
-      <span className="text-xs text-carbon-gray-60 text-center leading-tight hidden sm:block">
+      <span className="text-[10px] text-white/35 text-center leading-tight hidden sm:block min-h-[2.5em]">
         {day.weatherLabel}
       </span>
 
-      {/* Temperature range */}
-      <div className="flex flex-col items-center gap-1 w-full">
-        <div className="flex items-center justify-between w-full px-1">
-          <span className="text-xs text-carbon-gray-50 hidden sm:inline">Lo</span>
-          <span className="text-sm font-medium text-carbon-gray-60 tabular-nums">
-            {day.minTemp}°
-          </span>
-        </div>
+      {/* Temp range */}
+      <div className="w-full flex flex-col items-center gap-1.5 mt-1">
+        {/* High temp */}
+        <span className="text-sm font-semibold text-white tabular-nums">
+          {day.maxTemp}°
+        </span>
 
-        {/* Temperature bar */}
-        <div className="w-full h-1 bg-carbon-gray-20 overflow-hidden">
+        {/* Gradient bar showing relative position in overall range */}
+        <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
           <div
-            className="h-full bg-carbon-blue-60"
-            style={{ width: `${Math.max(20, Math.min(100, (range / 40) * 100))}%` }}
+            className="h-full rounded-full"
+            style={{
+              marginLeft: `${lowPct}%`,
+              width: `${Math.max(highPct - lowPct, 8)}%`,
+              background: "linear-gradient(90deg, #60a5fa, #fbbf24)",
+            }}
           />
         </div>
 
-        <div className="flex items-center justify-between w-full px-1">
-          <span className="text-xs text-carbon-gray-50 hidden sm:inline">Hi</span>
-          <span className="text-sm font-semibold text-carbon-gray-100 tabular-nums">
-            {day.maxTemp}°
-          </span>
-        </div>
+        {/* Low temp */}
+        <span className="text-sm text-white/40 tabular-nums">{day.minTemp}°</span>
       </div>
     </div>
   );
