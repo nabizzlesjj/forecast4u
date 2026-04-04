@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 
+// ── Shared types ──────────────────────────────────────────────────────────────
+
 export interface CurrentWeatherData {
   temperature: number;
   feelsLike: number;
@@ -10,20 +12,31 @@ export interface CurrentWeatherData {
   isDay: boolean;
 }
 
-export interface DayForecast {
-  date: string;
-  dayName: string;
-  maxTemp: number;
-  minTemp: number;
+export interface HourlySlot {
+  time: string;       // "2024-06-01T15:00"
+  hour: string;       // "3 PM"
+  temperature: number;
+  feelsLike: number;
   weatherCode: number;
   weatherLabel: string;
+  windSpeed: number;
+  precipProb: number;
+  humidity: number;
+  isNow: boolean;
+}
+
+export interface DayGroup {
+  date: string;       // "2024-06-01"
+  dayName: string;    // "Today", "Mon", etc.
+  dateLabel: string;  // "Jun 1"
+  slots: HourlySlot[];
 }
 
 export interface WeatherResult {
   locationName: string;
   zip: string;
   current: CurrentWeatherData;
-  forecast: DayForecast[];
+  hourlyByDay: DayGroup[];
 }
 
 type WeatherState =
@@ -32,7 +45,11 @@ type WeatherState =
   | { status: "success"; data: WeatherResult }
   | { status: "error"; message: string };
 
-// WMO weather interpretation codes -> label and icon key
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const DAY_NAMES = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
 function getWeatherLabel(code: number): string {
   if (code === 0) return "Clear Sky";
   if (code === 1) return "Mainly Clear";
@@ -52,8 +69,31 @@ function getWeatherLabel(code: number): string {
   return "Unknown";
 }
 
+/** "2024-06-01T15:00" → "3 PM" */
+function formatHour(timeStr: string): string {
+  const h = parseInt(timeStr.slice(11, 13), 10);
+  if (h === 0) return "12 AM";
+  if (h === 12) return "12 PM";
+  return h < 12 ? `${h} AM` : `${h - 12} PM`;
+}
+
+/** "2024-06-01" → "Jun 1" */
+function formatDateLabel(dateStr: string): string {
+  const month = parseInt(dateStr.slice(5, 7), 10) - 1;
+  const day   = parseInt(dateStr.slice(8, 10), 10);
+  return `${MONTHS[month]} ${day}`;
+}
+
+/** True when the current wall-clock time falls inside this 3-hour window. */
+function isCurrentSlot(timeStr: string): boolean {
+  const slotMs = new Date(timeStr).getTime();
+  const nowMs  = Date.now();
+  return nowMs >= slotMs && nowMs < slotMs + 3 * 60 * 60 * 1000;
+}
+
+// ── API calls ─────────────────────────────────────────────────────────────────
+
 async function geocodeZip(zip: string): Promise<{ lat: number; lon: number; name: string }> {
-  // Use Open-Meteo geocoding with ZIP as search term
   const url = `https://geocoding-api.open-meteo.com/v1/search?name=${zip}&count=5&language=en&format=json&countryCode=US`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("Geocoding service unavailable.");
@@ -63,14 +103,13 @@ async function geocodeZip(zip: string): Promise<{ lat: number; lon: number; name
     throw new Error(`No location found for ZIP code "${zip}". Please verify and try again.`);
   }
 
-  // Filter for US results and prefer postal codes matching the zip
   const usResults = data.results.filter(
     (r: { country_code?: string }) => r.country_code === "US"
   );
-  const match = usResults.find(
-    (r: { name?: string; admin3?: string }) =>
+  const match =
+    usResults.find((r: { name?: string; admin3?: string }) =>
       r.name === zip || r.admin3 === zip
-  ) || usResults[0];
+    ) || usResults[0];
 
   if (!match) {
     throw new Error(`Could not locate ZIP code "${zip}" in the United States.`);
@@ -85,52 +124,86 @@ async function geocodeZip(zip: string): Promise<{ lat: number; lon: number; name
 
 async function fetchWeather(lat: number, lon: number): Promise<{
   current: CurrentWeatherData;
-  forecast: DayForecast[];
+  hourlyByDay: DayGroup[];
 }> {
   const params = new URLSearchParams({
-    latitude: String(lat),
+    latitude:  String(lat),
     longitude: String(lon),
-    current: "temperature_2m,apparent_temperature,relative_humidity_2m,windspeed_10m,weathercode,is_day",
-    daily: "temperature_2m_max,temperature_2m_min,weathercode",
+    current:   "temperature_2m,apparent_temperature,relative_humidity_2m,windspeed_10m,weathercode,is_day",
+    hourly:    "temperature_2m,apparent_temperature,weathercode,windspeed_10m,precipitation_probability,relativehumidity_2m",
     temperature_unit: "fahrenheit",
-    windspeed_unit: "mph",
-    timezone: "auto",
-    forecast_days: "5",
+    windspeed_unit:   "mph",
+    timezone:         "auto",
+    forecast_days:    "5",
   });
 
   const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
   if (!res.ok) throw new Error("Weather service unavailable.");
   const data = await res.json();
 
+  // ── Current conditions ──────────────────────────────────────────────────
   const c = data.current;
-  const d = data.daily;
-
   const current: CurrentWeatherData = {
     temperature: Math.round(c.temperature_2m),
-    feelsLike: Math.round(c.apparent_temperature),
-    humidity: c.relative_humidity_2m,
-    windSpeed: Math.round(c.windspeed_10m),
+    feelsLike:   Math.round(c.apparent_temperature),
+    humidity:    c.relative_humidity_2m,
+    windSpeed:   Math.round(c.windspeed_10m),
     weatherCode: c.weathercode,
     weatherLabel: getWeatherLabel(c.weathercode),
     isDay: c.is_day === 1,
   };
 
-  const forecast: DayForecast[] = (d.time as string[]).map((dateStr: string, i: number) => {
-    const date = new Date(dateStr + "T12:00:00");
-    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const isToday = i === 0;
-    return {
-      date: dateStr,
-      dayName: isToday ? "Today" : dayNames[date.getDay()],
-      maxTemp: Math.round(d.temperature_2m_max[i]),
-      minTemp: Math.round(d.temperature_2m_min[i]),
-      weatherCode: d.weathercode[i],
-      weatherLabel: getWeatherLabel(d.weathercode[i]),
-    };
+  // ── Hourly → 3-hour slots, grouped by day ────────────────────────────────
+  const h = data.hourly as {
+    time: string[];
+    temperature_2m: number[];
+    apparent_temperature: number[];
+    weathercode: number[];
+    windspeed_10m: number[];
+    precipitation_probability: number[];
+    relativehumidity_2m: number[];
+  };
+
+  const dayMap = new Map<string, DayGroup>();
+  let dayIndex = 0;
+
+  h.time.forEach((timeStr, i) => {
+    // Keep only every 3rd hour (0, 3, 6, 9, 12, 15, 18, 21)
+    const hourOfDay = parseInt(timeStr.slice(11, 13), 10);
+    if (hourOfDay % 3 !== 0) return;
+
+    const date = timeStr.slice(0, 10); // "2024-06-01"
+
+    if (!dayMap.has(date)) {
+      const dt = new Date(date + "T12:00:00");
+      const dayName = dayIndex === 0 ? "Today" : DAY_NAMES[dt.getDay()];
+      dayMap.set(date, {
+        date,
+        dayName,
+        dateLabel: formatDateLabel(date),
+        slots: [],
+      });
+      dayIndex++;
+    }
+
+    dayMap.get(date)!.slots.push({
+      time:        timeStr,
+      hour:        formatHour(timeStr),
+      temperature: Math.round(h.temperature_2m[i]),
+      feelsLike:   Math.round(h.apparent_temperature[i]),
+      weatherCode: h.weathercode[i],
+      weatherLabel: getWeatherLabel(h.weathercode[i]),
+      windSpeed:   Math.round(h.windspeed_10m[i]),
+      precipProb:  h.precipitation_probability[i] ?? 0,
+      humidity:    h.relativehumidity_2m[i],
+      isNow:       isCurrentSlot(timeStr),
+    });
   });
 
-  return { current, forecast };
+  return { current, hourlyByDay: Array.from(dayMap.values()) };
 }
+
+// ── Hook ──────────────────────────────────────────────────────────────────────
 
 export function useWeather(zip: string, refreshKey = 0): WeatherState {
   const [state, setState] = useState<WeatherState>({ status: "idle" });
@@ -147,16 +220,12 @@ export function useWeather(zip: string, refreshKey = 0): WeatherState {
     (async () => {
       try {
         const location = await geocodeZip(zip);
-        const weather = await fetchWeather(location.lat, location.lon);
+        const weather  = await fetchWeather(location.lat, location.lon);
 
         if (!cancelled) {
           setState({
             status: "success",
-            data: {
-              locationName: location.name,
-              zip,
-              ...weather,
-            },
+            data: { locationName: location.name, zip, ...weather },
           });
         }
       } catch (err) {
@@ -169,9 +238,7 @@ export function useWeather(zip: string, refreshKey = 0): WeatherState {
       }
     })();
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [zip, refreshKey]);
 
   return state;

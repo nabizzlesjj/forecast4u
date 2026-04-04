@@ -15,6 +15,32 @@ import Weather from "./Weather";
 
 // ── Shared fixture data ───────────────────────────────────────────────────────
 
+function makeSlot(time: string, temp: number, isNow = false) {
+  return {
+    time,
+    hour: "12 PM",
+    temperature: temp,
+    feelsLike: temp - 2,
+    weatherCode: 3,
+    weatherLabel: "Overcast",
+    windSpeed: 7,
+    precipProb: 20,
+    humidity: 65,
+    isNow,
+  };
+}
+
+function makeDay(date: string, dayName: string, dateLabel: string) {
+  return {
+    date,
+    dayName,
+    dateLabel,
+    slots: Array.from({ length: 8 }, (_, i) =>
+      makeSlot(`${date}T${String(i * 3).padStart(2, "0")}:00`, 70 + i, i === 3)
+    ),
+  };
+}
+
 const MOCK_WEATHER_DATA = {
   locationName: "Atlanta, Georgia",
   zip: "30307",
@@ -27,12 +53,12 @@ const MOCK_WEATHER_DATA = {
     weatherLabel: "Overcast",
     isDay: true,
   },
-  forecast: [
-    { date: "2024-06-01", dayName: "Today", maxTemp: 80, minTemp: 62, weatherCode: 3,  weatherLabel: "Overcast" },
-    { date: "2024-06-02", dayName: "Mon",   maxTemp: 75, minTemp: 58, weatherCode: 1,  weatherLabel: "Mainly Clear" },
-    { date: "2024-06-03", dayName: "Tue",   maxTemp: 70, minTemp: 55, weatherCode: 2,  weatherLabel: "Partly Cloudy" },
-    { date: "2024-06-04", dayName: "Wed",   maxTemp: 68, minTemp: 52, weatherCode: 61, weatherLabel: "Rain" },
-    { date: "2024-06-05", dayName: "Thu",   maxTemp: 73, minTemp: 57, weatherCode: 0,  weatherLabel: "Clear Sky" },
+  hourlyByDay: [
+    makeDay("2024-06-01", "Today", "Jun 1"),
+    makeDay("2024-06-02", "Mon",   "Jun 2"),
+    makeDay("2024-06-03", "Tue",   "Jun 3"),
+    makeDay("2024-06-04", "Wed",   "Jun 4"),
+    makeDay("2024-06-05", "Thu",   "Jun 5"),
   ],
 };
 
@@ -60,8 +86,8 @@ vi.mock("../components/CurrentWeatherDisplay", () => ({
   ),
 }));
 vi.mock("../components/ForecastGrid", () => ({
-  default: ({ onRefresh }: { onRefresh?: () => void }) => (
-    <div data-testid="forecast-grid">
+  default: ({ hourlyByDay, onRefresh }: { hourlyByDay?: unknown[]; onRefresh?: () => void }) => (
+    <div data-testid="forecast-grid" data-days={hourlyByDay?.length}>
       <button onClick={onRefresh} aria-label="Refresh forecast">Refresh</button>
     </div>
   ),

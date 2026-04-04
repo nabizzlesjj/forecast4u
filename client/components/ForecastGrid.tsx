@@ -1,35 +1,30 @@
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Droplets } from "lucide-react";
 import WeatherIcon, { getWeatherColor, getWeatherGlow } from "./WeatherIcon";
-import type { DayForecast } from "../hooks/useWeather";
+import type { DayGroup, HourlySlot } from "../hooks/useWeather";
 
 interface ForecastGridProps {
-  forecast: DayForecast[];
+  hourlyByDay: DayGroup[];
   onRefresh?: () => void;
   isRefreshing?: boolean;
 }
 
 export default function ForecastGrid({
-  forecast,
+  hourlyByDay,
   onRefresh,
   isRefreshing = false,
 }: ForecastGridProps) {
-  const allTemps = forecast.flatMap((d) => [d.minTemp, d.maxTemp]);
-  const globalMin = Math.min(...allTemps);
-  const globalMax = Math.max(...allTemps);
-
   return (
     <div
       className="animate-slide-up"
       style={{ background: "linear-gradient(180deg, #111827 0%, #0f172a 100%)" }}
     >
       {/* Section header */}
-      <div className="px-6 sm:px-12 pt-6 pb-4 flex items-center gap-3">
+      <div className="px-6 sm:px-8 pt-6 pb-2 flex items-center gap-3">
         <span className="text-xs font-semibold uppercase tracking-widest text-white/30">
-          5-Day Forecast
+          5-Day Hourly Forecast
         </span>
         <div className="flex-1 h-px bg-white/10" />
 
-        {/* Refresh button */}
         {onRefresh && (
           <button
             onClick={onRefresh}
@@ -40,7 +35,11 @@ export default function ForecastGrid({
           >
             <RefreshCw
               size={13}
-              className={isRefreshing ? "animate-spin" : "group-hover:rotate-180 transition-transform duration-500"}
+              className={
+                isRefreshing
+                  ? "animate-spin"
+                  : "group-hover:rotate-180 transition-transform duration-500"
+              }
             />
             <span className="text-[11px] uppercase tracking-widest hidden sm:inline">
               Refresh
@@ -49,88 +48,97 @@ export default function ForecastGrid({
         )}
       </div>
 
-      {/* Cards row */}
-      <div className="grid grid-cols-5 gap-2 px-4 sm:px-8 pb-8">
-        {forecast.map((day, i) => (
-          <ForecastCard
-            key={day.date}
-            day={day}
-            globalMin={globalMin}
-            globalMax={globalMax}
-            isToday={i === 0}
-          />
+      {/* Day rows */}
+      <div className="pb-6 space-y-1">
+        {hourlyByDay.map((day) => (
+          <DayRow key={day.date} day={day} />
         ))}
       </div>
     </div>
   );
 }
 
-function ForecastCard({
-  day,
-  globalMin,
-  globalMax,
-  isToday,
-}: {
-  day: DayForecast;
-  globalMin: number;
-  globalMax: number;
-  isToday: boolean;
-}) {
-  const iconColor = getWeatherColor(day.weatherCode);
-  const glowColor = getWeatherGlow(day.weatherCode);
-  const range = globalMax - globalMin || 1;
-  const lowPct = ((day.minTemp - globalMin) / range) * 100;
-  const highPct = ((day.maxTemp - globalMin) / range) * 100;
+// ── Day row ───────────────────────────────────────────────────────────────────
+
+function DayRow({ day }: { day: DayGroup }) {
+  const high = Math.max(...day.slots.map((s) => s.temperature));
+  const low  = Math.min(...day.slots.map((s) => s.temperature));
+
+  return (
+    <div className="px-4 sm:px-8">
+      {/* Day header */}
+      <div className="flex items-baseline justify-between py-2 border-b border-white/8 mb-2">
+        <span className="text-xs font-semibold uppercase tracking-widest text-white/50">
+          {day.dayName}
+        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-white/25">{day.dateLabel}</span>
+          <span className="text-xs text-white/25">
+            <span className="text-white/50 font-medium">{high}°</span>
+            {" / "}
+            {low}°
+          </span>
+        </div>
+      </div>
+
+      {/* Horizontal scroll strip */}
+      <div
+        className="flex gap-2 overflow-x-auto pb-3"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}
+      >
+        {day.slots.map((slot) => (
+          <HourCard key={slot.time} slot={slot} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Individual 3-hour card ────────────────────────────────────────────────────
+
+function HourCard({ slot }: { slot: HourlySlot }) {
+  const iconColor = getWeatherColor(slot.weatherCode);
+  const glowColor = getWeatherGlow(slot.weatherCode);
 
   return (
     <div
       className={`
-        group relative flex flex-col items-center gap-3 rounded-2xl px-2 py-5
-        border transition-all duration-200 cursor-default
-        ${isToday
-          ? "bg-white/10 border-white/20 shadow-lg"
+        flex-shrink-0 flex flex-col items-center gap-1.5 rounded-xl px-3 py-3 w-[72px]
+        border transition-all duration-150
+        ${slot.isNow
+          ? "bg-carbon-blue-60/20 border-carbon-blue-40/40 shadow-lg"
           : "bg-white/5 border-white/8 hover:bg-white/10 hover:border-white/15"
         }
       `}
     >
-      {isToday && (
-        <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-carbon-blue-60 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider">
-          Now
-        </span>
-      )}
-
-      <span className={`text-xs font-semibold uppercase tracking-widest ${isToday ? "text-white" : "text-white/40"}`}>
-        {day.dayName}
+      {/* Time label */}
+      <span
+        className={`text-[10px] font-semibold uppercase tracking-wide ${
+          slot.isNow ? "text-carbon-blue-30" : "text-white/40"
+        }`}
+      >
+        {slot.isNow ? "Now" : slot.hour}
       </span>
 
+      {/* Weather icon */}
       <div
-        className={`${iconColor} transition-transform duration-200 group-hover:scale-110`}
-        style={{ filter: `drop-shadow(0 0 8px ${glowColor})` }}
+        className={iconColor}
+        style={{ filter: `drop-shadow(0 0 6px ${glowColor})` }}
       >
-        <WeatherIcon code={day.weatherCode} size={36} />
+        <WeatherIcon code={slot.weatherCode} size={22} />
       </div>
 
-      <span className="text-[10px] text-white/35 text-center leading-tight hidden sm:block min-h-[2.5em]">
-        {day.weatherLabel}
+      {/* Temperature */}
+      <span className="text-sm font-semibold text-white tabular-nums">
+        {slot.temperature}°
       </span>
 
-      <div className="w-full flex flex-col items-center gap-1.5 mt-1">
-        <span className="text-sm font-semibold text-white tabular-nums">
-          {day.maxTemp}°
+      {/* Precip probability */}
+      <div className="flex items-center gap-0.5">
+        <Droplets size={9} className="text-sky-400/70" />
+        <span className="text-[10px] text-white/35 tabular-nums">
+          {slot.precipProb}%
         </span>
-
-        <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-          <div
-            className="h-full rounded-full"
-            style={{
-              marginLeft: `${lowPct}%`,
-              width: `${Math.max(highPct - lowPct, 8)}%`,
-              background: "linear-gradient(90deg, #60a5fa, #fbbf24)",
-            }}
-          />
-        </div>
-
-        <span className="text-sm text-white/40 tabular-nums">{day.minTemp}°</span>
       </div>
     </div>
   );

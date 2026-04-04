@@ -103,7 +103,7 @@ export default function Weather() {
             />
 
             <ForecastGrid
-              forecast={state.data.forecast}
+              hourlyByDay={state.data.hourlyByDay}
               onRefresh={handleRefresh}
               isRefreshing={false}
             />
