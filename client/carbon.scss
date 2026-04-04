@@ -1,0 +1,4 @@
+// Carbon Design System — full style import via Sass module resolution.
+// Vite's sass preprocessor resolves `@use` from node_modules correctly,
+// whereas a direct node_modules path import fails under pnpm's directory layout.
+@use '@carbon/react';
