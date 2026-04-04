@@ -56,7 +56,7 @@ export default function ZipSearch({
     : `w-full bg-carbon-gray-10 border-b-2 outline-none transition-colors
        font-mono placeholder-carbon-gray-40 text-carbon-gray-100
        ${isLarge
-         ? "pl-12 pr-4 py-4 text-2xl border-carbon-gray-50 focus:border-carbon-blue-60"
+         ? "pl-12 pr-4 py-4 text-base border-carbon-gray-50 focus:border-carbon-blue-60"
          : "pl-9 pr-4 py-2 text-sm border-carbon-gray-50 focus:border-carbon-blue-60"
        }
        ${error ? "border-red-500" : ""}`;
