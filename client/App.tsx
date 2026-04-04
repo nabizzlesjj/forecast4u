@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Link, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import {
   Theme,
   Header,
@@ -10,8 +10,7 @@ import {
   HeaderGlobalAction,
   SkipToContent,
 } from "@carbon/react";
-import { Help, Search } from "@carbon/icons-react";
-import { useState } from "react";
+import { Help } from "@carbon/icons-react";
 import Index from "./pages/Index";
 import Weather from "./pages/Weather";
 import NotFound from "./pages/NotFound";
@@ -21,17 +20,6 @@ const queryClient = new QueryClient();
 // ── Carbon Header with React Router navigation ────────────────────────────────
 
 function CarbonHeader() {
-  const [zip, setZip] = useState("");
-  const navigate = useNavigate();
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (/^\d{5}$/.test(zip.trim())) {
-      navigate(`/weather/${zip.trim()}`);
-      setZip("");
-    }
-  };
-
   return (
     <Header aria-label="Forecast4U">
       <SkipToContent />
@@ -77,43 +65,6 @@ function CarbonHeader() {
 
       {/* Global action bar */}
       <HeaderGlobalBar>
-        {/* Inline ZIP search */}
-        <form
-          onSubmit={handleSearch}
-          style={{ display: "flex", alignItems: "center", height: "100%" }}
-        >
-          <input
-            type="text"
-            inputMode="numeric"
-            value={zip}
-            onChange={(e) => setZip(e.target.value.replace(/\D/g, "").slice(0, 5))}
-            placeholder="ZIP..."
-            maxLength={5}
-            aria-label="Quick ZIP search"
-            style={{
-              background: "transparent",
-              border: "none",
-              borderBottom: "1px solid #525252",
-              color: "white",
-              fontSize: "0.875rem",
-              padding: "0 0.75rem",
-              width: "5.5rem",
-              height: "100%",
-              outline: "none",
-              fontFamily: "inherit",
-            }}
-          />
-          <HeaderGlobalAction
-            aria-label="Search by ZIP"
-            tooltipAlignment="end"
-            type="submit"
-            // @ts-expect-error allow submit type on HeaderGlobalAction
-            onClick={() => {}}
-          >
-            <Search size={20} />
-          </HeaderGlobalAction>
-        </form>
-
         {/* Contact Support */}
         <HeaderGlobalAction
           aria-label="Contact Support"
