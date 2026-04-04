@@ -97,7 +97,7 @@ export default function Weather() {
         {/* Error state — Carbon InlineNotification */}
         {state.status === "error" && (
           <Grid style={{ paddingTop: "var(--cds-spacing-09, 3rem)" }}>
-            <Column lg={10} md={8} sm={4} lgOffset={3} mdOffset={0}>
+            <Column lg={10} md={8} sm={4} style={{ marginInline: "auto" }}>
               <InlineNotification
                 kind="error"
                 title="Unable to Load Weather"
