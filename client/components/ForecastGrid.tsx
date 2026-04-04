@@ -82,11 +82,8 @@ function DayRow({ day }: { day: DayGroup }) {
         </div>
       </div>
 
-      {/* Horizontal scroll strip */}
-      <div
-        className="flex gap-2 overflow-x-auto pb-3"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}
-      >
+      {/* Hour cards — stretch to fill the full row */}
+      <div className="flex gap-1.5 pb-3">
         {day.slots.map((slot) => (
           <HourCard key={slot.time} slot={slot} />
         ))}
@@ -104,7 +101,7 @@ function HourCard({ slot }: { slot: HourlySlot }) {
   return (
     <div
       className={`
-        flex-shrink-0 flex flex-col items-center gap-1.5 rounded-xl px-3 py-3 w-[72px]
+        flex-1 min-w-0 flex flex-col items-center gap-1.5 rounded-xl px-2 py-3
         border transition-all duration-150
         ${slot.isNow
           ? "bg-carbon-blue-60/20 border-carbon-blue-40/40 shadow-lg"
