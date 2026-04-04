@@ -9,7 +9,7 @@ interface ForecastGridProps {
 }
 
 export default function ForecastGrid({
-  hourlyByDay,
+  hourlyByDay = [],
   onRefresh,
   isRefreshing = false,
 }: ForecastGridProps) {
@@ -61,8 +61,9 @@ export default function ForecastGrid({
 // ── Day row ───────────────────────────────────────────────────────────────────
 
 function DayRow({ day }: { day: DayGroup }) {
-  const high = Math.max(...day.slots.map((s) => s.temperature));
-  const low  = Math.min(...day.slots.map((s) => s.temperature));
+  const temps = (day.slots ?? []).map((s) => s.temperature);
+  const high = temps.length ? Math.max(...temps) : 0;
+  const low  = temps.length ? Math.min(...temps) : 0;
 
   return (
     <div className="px-4 sm:px-8">
