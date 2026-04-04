@@ -162,3 +162,13 @@ const data: MyRouteResponse = await response.json();
 - Production-ready with multiple deployment options
 - Comprehensive UI component library included
 - Type-safe API communication via shared interfaces
+
+## Agent Rules & Automation
+
+**Mandatory Testing Rule:**
+The Builder.io agent MUST automatically generate or update Vitest unit tests for every code change, new component, or updated logic.
+
+1. **Automation:** Do not wait for the user to prompt for testing. Include tests as part of the initial code generation.
+2. **Location:** Tests must be co-located with the component (e.g., `ComponentName.spec.tsx`).
+3. **Coverage:** Tests must verify the primary user interaction (e.g., ZIP code entry) and successful API/Routing outcomes.
+4. **Validation:** Ensure all new code passes `pnpm test` before finalizing the update.
