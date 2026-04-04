@@ -12,7 +12,6 @@ export default function Weather() {
   const { zip = "" } = useParams<{ zip: string }>();
   const state = useWeather(zip);
   const { addRecentZip } = useRecentSearches();
-  const navigate = useNavigate();
 
   // Save to recent searches whenever a ZIP resolves successfully
   useEffect(() => {
