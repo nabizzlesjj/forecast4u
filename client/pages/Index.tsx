@@ -1,6 +1,7 @@
-import { Cloud, ArrowRight, Wind, Droplets, Sun } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Cloud, ArrowRight, Wind, Droplets, Sun, Clock, X } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import ZipSearch from "../components/ZipSearch";
+import { useRecentSearches } from "../hooks/useRecentSearches";
 
 const FEATURED_LOCATIONS = [
   { zip: "10001", label: "New York City", state: "NY", icon: <Wind size={14} /> },
@@ -12,6 +13,14 @@ const FEATURED_LOCATIONS = [
 ];
 
 export default function Index() {
+  const { recentZips, addRecentZip, removeRecentZip } = useRecentSearches();
+  const navigate = useNavigate();
+
+  const handleTagClick = (zip: string) => {
+    addRecentZip(zip);
+    navigate(`/weather/${zip}`);
+  };
+
   return (
     <div
       className="min-h-[calc(100vh-48px)] flex flex-col"
@@ -49,7 +58,6 @@ export default function Index() {
             >
               <Cloud size={44} className="text-white" />
             </div>
-            {/* Decorative dot */}
             <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-carbon-blue-40 rounded-sm" />
           </div>
 
@@ -67,10 +75,33 @@ export default function Index() {
               size="large"
               variant="dark"
               placeholder="Enter a 5-digit ZIP code..."
+              onSearch={addRecentZip}
             />
           </div>
 
-          <p className="text-white/20 text-xs mt-4 tracking-wide">
+          {/* ── Recent Searches ── */}
+          {recentZips.length > 0 && (
+            <div className="w-full max-w-lg mt-5 text-left animate-fade-in">
+              <div className="flex items-center gap-2 mb-2.5">
+                <Clock size={11} className="text-white/25" />
+                <span className="text-[11px] font-semibold uppercase tracking-widest text-white/25">
+                  Recent Searches
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {recentZips.map((zip) => (
+                  <RecentTag
+                    key={zip}
+                    zip={zip}
+                    onClick={() => handleTagClick(zip)}
+                    onRemove={() => removeRecentZip(zip)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          <p className="text-white/20 text-xs mt-6 tracking-wide">
             United States only · No account required
           </p>
         </div>
@@ -130,6 +161,44 @@ export default function Index() {
           </a>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── Carbon-inspired interactive filter tag ──────────────────────────────────
+function RecentTag({
+  zip,
+  onClick,
+  onRemove,
+}: {
+  zip: string;
+  onClick: () => void;
+  onRemove: (e: React.MouseEvent) => void;
+}) {
+  return (
+    <div
+      className="group inline-flex items-center gap-0 rounded-full border border-white/15 bg-white/8 hover:bg-carbon-blue-60/20 hover:border-carbon-blue-40/40 transition-all duration-150 overflow-hidden"
+      role="group"
+    >
+      {/* Clickable label area */}
+      <button
+        type="button"
+        onClick={onClick}
+        className="flex items-center gap-1.5 pl-3 pr-2 py-1.5 text-xs font-mono text-white/60 group-hover:text-white transition-colors"
+      >
+        <Clock size={10} className="text-white/30 group-hover:text-carbon-blue-30 transition-colors" />
+        {zip}
+      </button>
+
+      {/* Dismiss button */}
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label={`Remove ${zip} from recent searches`}
+        className="flex items-center justify-center px-2 py-1.5 text-white/20 hover:text-white/70 hover:bg-white/10 transition-colors border-l border-white/10"
+      >
+        <X size={10} />
+      </button>
     </div>
   );
 }

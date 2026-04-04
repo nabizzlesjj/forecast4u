@@ -7,6 +7,8 @@ interface ZipSearchProps {
   size?: "default" | "large";
   variant?: "light" | "dark";
   placeholder?: string;
+  /** Called with the valid ZIP just before navigation occurs. */
+  onSearch?: (zip: string) => void;
 }
 
 export default function ZipSearch({
@@ -14,6 +16,7 @@ export default function ZipSearch({
   size = "default",
   variant = "light",
   placeholder = "Enter 5-digit ZIP code",
+  onSearch,
 }: ZipSearchProps) {
   const [zip, setZip] = useState(initialZip);
   const [error, setError] = useState("");
@@ -38,6 +41,7 @@ export default function ZipSearch({
       setError(validationError);
       return;
     }
+    onSearch?.(zip);
     navigate(`/weather/${zip}`);
   };
 

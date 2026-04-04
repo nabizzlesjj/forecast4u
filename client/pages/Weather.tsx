@@ -1,4 +1,6 @@
 import { useParams, Link } from "react-router-dom";
+import { useEffect } from "react";
+import { useRecentSearches } from "../hooks/useRecentSearches";
 import { AlertCircle, ArrowLeft, RefreshCw, Wifi } from "lucide-react";
 import { useWeather } from "../hooks/useWeather";
 import CurrentWeatherDisplay from "../components/CurrentWeatherDisplay";
@@ -9,6 +11,13 @@ import ZipSearch from "../components/ZipSearch";
 export default function Weather() {
   const { zip = "" } = useParams<{ zip: string }>();
   const state = useWeather(zip);
+  const { addRecentZip } = useRecentSearches();
+  const navigate = useNavigate();
+
+  // Save to recent searches whenever a ZIP resolves successfully
+  useEffect(() => {
+    if (state.status === "success") addRecentZip(zip);
+  }, [state.status, zip]);
 
   return (
     <div className="min-h-[calc(100vh-48px)] flex flex-col bg-[#0d1117]">
@@ -25,7 +34,12 @@ export default function Weather() {
         <div className="hidden sm:block w-px h-4 bg-white/10 mx-1" />
 
         <div className="flex-1 w-full sm:w-auto sm:max-w-xs">
-          <ZipSearch initialZip={zip} placeholder="Search another ZIP..." variant="dark" />
+          <ZipSearch
+            initialZip={zip}
+            placeholder="Search another ZIP..."
+            variant="dark"
+            onSearch={addRecentZip}
+          />
         </div>
 
         {state.status === "success" && (
