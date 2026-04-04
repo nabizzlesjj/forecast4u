@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { Cloud, Menu, X, Search } from "lucide-react";
+import { Cloud, Menu, X, Search, LifeBuoy } from "lucide-react";
 
 export default function AppHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -64,10 +64,20 @@ export default function AppHeader() {
           </Link>
         </nav>
 
+        {/* Contact Support ghost button (desktop) */}
+        <a
+          href="mailto:support@forecast4u.com"
+          aria-label="Contact Support"
+          className="hidden lg:flex items-center gap-2 ml-auto mr-3 px-3 h-8 text-xs text-carbon-gray-30 border border-carbon-gray-60 hover:bg-carbon-gray-80 hover:text-white hover:border-carbon-gray-40 transition-colors flex-shrink-0"
+        >
+          <LifeBuoy size={14} />
+          <span>Contact Support</span>
+        </a>
+
         {/* Quick search (desktop) */}
         <form
           onSubmit={handleQuickSearch}
-          className="hidden lg:flex items-center ml-auto"
+          className="hidden lg:flex items-center"
         >
           <div className="relative flex items-center">
             <input
@@ -115,6 +125,17 @@ export default function AppHeader() {
               Example: Beverly Hills (90210)
             </Link>
           </nav>
+          {/* Contact Support (mobile) */}
+            <a
+              href="mailto:support@forecast4u.com"
+              aria-label="Contact Support"
+              className="flex items-center gap-2 px-4 py-3 text-sm text-carbon-gray-30 hover:bg-carbon-gray-80 hover:text-white border-b border-carbon-gray-80 transition-colors"
+              onClick={() => setMenuOpen(false)}
+            >
+              <LifeBuoy size={15} />
+              <span>Contact Support</span>
+            </a>
+
           {/* Mobile quick search */}
           <form
             onSubmit={(e) => {
