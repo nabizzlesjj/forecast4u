@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- Background rounded square -->
+  <rect width="32" height="32" rx="7" fill="#0f62fe"/>
+  <!-- Cloud shape in white -->
+  <path d="M23 20a4 4 0 0 0 0-8 4.07 4.07 0 0 0-.6.05A5.5 5.5 0 0 0 11.1 14 4 4 0 0 0 12 22h11Z" fill="white"/>
+  <!-- Small accent square (Carbon-style) -->
+  <rect x="22" y="22" width="4" height="4" rx="1" fill="#78a9ff"/>
+</svg>
